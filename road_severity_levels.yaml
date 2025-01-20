@@ -1,0 +1,34 @@
+- type: Tfl.Api.Presentation.Entities.StatusSeverity, Tfl.Api.Presentation.Entities
+  modeName: road
+  severityLevel: 0
+  description: No Issues
+
+- type: Tfl.Api.Presentation.Entities.StatusSeverity, Tfl.Api.Presentation.Entities
+  modeName: road
+  severityLevel: 5
+  description: Closure
+
+- type: Tfl.Api.Presentation.Entities.StatusSeverity, Tfl.Api.Presentation.Entities
+  modeName: road
+  severityLevel: 6
+  description: Severe
+
+- type: Tfl.Api.Presentation.Entities.StatusSeverity, Tfl.Api.Presentation.Entities
+  modeName: road
+  severityLevel: 7
+  description: Serious
+
+- type: Tfl.Api.Presentation.Entities.StatusSeverity, Tfl.Api.Presentation.Entities
+  modeName: road
+  severityLevel: 8
+  description: Moderate
+
+- type: Tfl.Api.Presentation.Entities.StatusSeverity, Tfl.Api.Presentation.Entities
+  modeName: road
+  severityLevel: 9
+  description: Minimal
+
+- type: Tfl.Api.Presentation.Entities.StatusSeverity, Tfl.Api.Presentation.Entities
+  modeName: road
+  severityLevel: 10
+  description: No Exceptional Delays

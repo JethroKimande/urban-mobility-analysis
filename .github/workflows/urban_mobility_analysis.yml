@@ -1,0 +1,76 @@
+name: Urban Mobility Analysis
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Runs at 00:00 every Monday
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    env:
+      TFL_APP_ID: ${{ secrets.TFL_APP_ID }}
+      TFL_APP_KEY: ${{ secrets.TFL_APP_KEY }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8' # Specify your Python version here
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Analysis
+      run: python main.py
+
+    - name: Generate Markdown Report
+      run: |
+        echo "# Weekly Urban Mobility Report" > report.md
+        echo "## Road Disruption Overview" >> report.md
+        echo "![Disruption Map](london_disruptions.html)" >> report.md
+        echo "" >> report.md
+        echo "### Severe Disruptions This Week:" >> report.md
+        python -c "import json; disruptions = json.load(open('disruptions.json', 'r')); 
+                  severe = [d for d in disruptions if int(d.get('severityLevel', 11)) <= 7];
+                  for d in severe:
+                    print(f'- **{d.get('description', 'No description')}** - Severity: {d.get('severityLevel', 'Unknown')}', file=open('report.md', 'a'))"
+        echo "" >> report.md
+        echo "### Disruption Distribution by Severity:" >> report.md
+        python -c "import json; from collections import Counter; disruptions = json.load(open('disruptions.json', 'r'));
+                  counts = Counter(d['severityLevel'] for d in disruptions if 'severityLevel' in d);
+                  for severity, count in counts.items():
+                    print(f'- Severity {severity}: {count}', file=open('report.md', 'a'))"
+
+    - name: Commit and Push Updates
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Update weekly urban mobility report"
+          git push
+        fi
+
+    - name: Upload HTML Map
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: disruption-map
+        path: london_disruptions.html
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main' && github.event_name == 'schedule'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
+        force_orphan: true
+        publish_branch: gh-pages
