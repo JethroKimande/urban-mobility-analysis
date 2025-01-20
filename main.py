@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 from time import sleep
 import folium
+import json
 
 # Load YAML data for severity levels
 with open('road_severity_levels.yaml', 'r') as file:
@@ -98,31 +99,33 @@ else:
         print(f" - {impact}: {count} disruptions")
 
     # 3. Spatial analysis
-    # Create a base map centered on London
-    london_map = folium.Map(location=[51.5074, -0.1278], zoom_start=12)
+# Create a base map centered on London
+london_map = folium.Map(location=[51.5074, -0.1278], zoom_start=12)
 
-    for disruption in disruptions:
-        # Check if the disruption has a point (some might not have this data)
-        if 'point' in disruption:
-            try:
-                # TfL's point is in GeoJSON format, we'll extract the coordinates
-                point = disruption['point']
-                # Assuming the format is like: {"type":"Point","coordinates":[-0.1278,51.5074]}
-                coords = point['coordinates']
-                # Folium expects [lat, lon] but TfL gives [lon, lat]
-                lat, lon = coords[1], coords[0]
+for disruption in disruptions:
+    # Check if the disruption has a point
+    if 'point' in disruption:
+        try:
+            point = disruption['point']
+            print(f"Point data for disruption {disruption.get('id', 'No ID')}: {point}")
+            
+            # Check if point is a list
+            if isinstance(point, list) and len(point) == 2:
+                lat, lon = point[1], point[0]  # Assuming [lon, lat]
+            else:
+                raise ValueError("Point data format not recognized")
 
-                # Add a marker for each disruption
-                folium.Marker(
-                    [lat, lon],
-                    popup=f"{disruption.get('description', 'No description')}<br>Severity: {severity_dict.get(int(disruption['severityLevel']), 'Unknown')}",
-                    icon=folium.Icon(color='red' if int(disruption['severityLevel']) <= 7 else 'blue')
-                ).add_to(london_map)
-            except (KeyError, IndexError):
-                print(f"Could not plot disruption: {disruption.get('id', 'No ID')} - Missing or incorrect point data")
+            # Add a marker for each disruption
+            folium.Marker(
+                [lat, lon],
+                popup=f"{disruption.get('description', 'No description')}<br>Severity: {severity_dict.get(int(disruption['severityLevel']), 'Unknown')}",
+                icon=folium.Icon(color='red' if int(disruption['severityLevel']) <= 7 else 'blue')
+            ).add_to(london_map)
+        except (KeyError, IndexError, TypeError, ValueError) as e:
+            print(f"Could not plot disruption: {disruption.get('id', 'No ID')} - Error: {e}")
 
-    # Save the map
-    london_map.save('london_disruptions.html')
+# Save the map
+london_map.save('london_disruptions.html')
 
-    print("\nSpatial Analysis:")
-    print("A map of disruptions has been saved as 'london_disruptions.html'.")
+print("\nSpatial Analysis:")
+print("A map of disruptions has been saved as 'london_disruptions.html'.")

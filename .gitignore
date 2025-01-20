@@ -170,3 +170,4 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 road_severity_levels.yaml
+road_severity_levels.yaml
