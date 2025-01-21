@@ -69,10 +69,10 @@ else:
     plt.tight_layout()
 
     # Save the plot as an image
-    severity_plot_buffer = BytesIO()
-    plt.savefig(severity_plot_buffer, format='png')
-    severity_plot_buffer.seek(0)
-    severity_plot_data = base64.b64encode(severity_plot_buffer.getvalue()).decode()
+    # severity_plot_buffer = BytesIO()
+    plt.savefig('severity_plot.png')
+    # severity_plot_buffer.seek(0)
+    # severity_plot_data = base64.b64encode(severity_plot_buffer.getvalue()).decode()
 
     plt.close()
 
@@ -94,10 +94,10 @@ else:
         plt.ylabel('Count of Disruptions')
 
         # Save this plot as an image
-        time_series_plot_buffer = BytesIO()
-        plt.savefig(time_series_plot_buffer, format='png')
-        time_series_plot_buffer.seek(0)
-        time_series_plot_data = base64.b64encode(time_series_plot_buffer.getvalue()).decode()
+        # time_series_plot_buffer = BytesIO()
+        plt.savefig("time_series_plot.png")
+        # time_series_plot_buffer.seek(0)
+        # time_series_plot_data = base64.b64encode(time_series_plot_buffer.getvalue()).decode()
 
         plt.close()
 
@@ -159,9 +159,9 @@ custom_html = f"""
   <h3>Urban Mobility Analysis</h3>
   <p>This map shows current road disruptions in London. Click on markers for details.</p>
   <h4>Severity of Disruptions</h4>
-  <img src="data:image/png;base64,{severity_plot_data}" alt="Severity Plot" width="100%">
+  <img src="severity_plot.png" alt="Severity Plot" width="100%">
   <h4>Time Series of Disruptions</h4>
-  <img src="data:image/png;base64,{time_series_plot_data}" alt="Time Series Plot" width="100%">
+  <img src="time_series_plot.png" alt="Time Series Plot" width="100%">
 </div>
 {{%include map.html%}}
 """
