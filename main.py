@@ -145,71 +145,77 @@ for disruption in disruptions:
             print(f"Could not plot disruption: {disruption.get('id', 'No ID')} - Error: {e}")
 
 # Save the map
-
 london_map.save("map.html")
 
-custom_html = f"""
-<div style="position: fixed; 
-           bottom: 50px; left: 50px; 
-           width: 300px; 
-           background-color: white; 
-           padding: 10px; 
-           border: 1px solid #ccc; 
-           border-radius: 5px;">
-  <h3>Urban Mobility Analysis</h3>
-  <p>This map shows current road disruptions in London. Click on markers for details.</p>
-  <h4>Severity of Disruptions</h4>
-  <img src="severity_plot.png" alt="Severity Plot" width="100%">
-  <h4>Time Series of Disruptions</h4>
-  <img src="time_series_plot.png" alt="Time Series Plot" width="100%">
-</div>
-{{%include map.html%}}
-"""
-
+# Create a blog-like HTML content with detailed explanations
 html_content = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Urban Mobility Analysis</title>
+    <title>Urban Mobility Blog</title>
     <style>
-        body {{ display: flex; flex-direction: column; align-items: center; }}
-        .container {{ display: flex; width: 100%; max-width: 1200px; margin: 20px 0; }}
-        .map-container, .plot-container {{ flex: 1; padding: 10px; }}
-        iframe {{ width: 100%; height: 600px; border: none; }}
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }}
+        .header {{ background-color: #333; color: white; padding: 15px 0; text-align: center; }}
+        .nav {{ background-color: #444; overflow: hidden; }}
+        .nav a {{ float: left; display: block; color: white; text-align: center; padding: 14px 16px; text-decoration: none; }}
+        .nav a:hover {{ background-color: #ddd; color: black; }}
+        .content {{ display: flex; flex-wrap: wrap; max-width: 1200px; margin: 20px auto; }}
+        .main-content {{ flex: 3; background-color: white; padding: 20px; margin-right: 20px; }}
+        .sidebar {{ flex: 1; background-color: white; padding: 20px; }}
+        .post {{ margin-bottom: 20px; }}
+        .post h2 {{ color: #333; }}
+        iframe {{ width: 100%; height: 400px; border: none; margin-bottom: 20px; }}
+        img {{ max-width: 100%; height: auto; margin-bottom: 20px; }}
         @media (max-width: 768px) {{ 
-            .container {{ flex-direction: column; }}
-            .map-container, .plot-container {{ width: 100%; }}
+            .content {{ flex-direction: column; }}
+            .main-content, .sidebar {{ flex: 1 1 100%; margin-right: 0; margin-bottom: 20px; }}
         }}
     </style>
 </head>
 <body>
-    <h1>Urban Mobility Analysis</h1>
-    <div class="container">
-        <div class="map-container">
-            <h2>Map of Road Disruptions in London</h2>
-            <iframe src="map.html" title="London Disruptions Map"></iframe>
-        </div>
-       
-        <div class="plot-container">
-            <h2>Severity of Disruptions</h2>
-            <img src="severity_plot.png" alt="Severity Plot" width="100%">
-            <h2>Time Series of Disruptions</h2>
-            <img src="time_series_plot.png" alt="Time Series Plot" width="100%">
-        </div>
-    </div>
-</body>
-</html>
-"""
+    <header class="header">
+        <h1>Urban Mobility Blog</h1>
+    </header>
 
-with open('index.html', 'w') as f:
-    f.write(html_content)
+    <nav class="nav">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#analysis">Analysis</a>
+        <a href="#contact">Contact</a>
+    </nav>
 
-# Add custom HTML to the map
-# london_map.get_root().html.add_child(folium.Element(custom_html))
+    <div class="content">
+        <main class="main-content">
+            <article class="post">
+                <h2 id="analysis">Weekly Urban Mobility Analysis</h2>
+                <p>Published on: {datetime.now().strftime('%Y-%m-%d')}</p>
+                
+                <section>
+                    <h3>Introduction</h3>
+                    <p>Welcome to our weekly urban mobility analysis focusing on road disruptions in London. This analysis aims to provide insights into the severity, timing, and location of disruptions to help in planning and understanding urban mobility issues. By analyzing data from Transport for London (TfL), we can offer a comprehensive view of how disruptions impact the city's transportation network.</p>
+                </section>
 
-# london_map.save('index.html')
+                <section>
+                    <h3>Analysis Summary</h3>
+                    <p><strong>Severe disruptions:</strong> There are {len(severe_disruptions)} severe disruptions this week. These are disruptions with a severity level of 7 or less, indicating significant impact on traffic flow, often requiring alternative routes or causing considerable delays.</p>
+                    <ul>
+                        {''.join([f"<li><strong>{severity_dict.get(int(d['severityLevel']), 'Unknown severity')}</strong>: {d.get('description', 'No description')} - This disruption might affect major roads or public transport routes, leading to rerouting or increased congestion.</li>" for d in severe_disruptions])}
+                    </ul>
+                    <p><strong>Impact Analysis by Severity:</strong> Below is a breakdown of how many disruptions occurred at each severity level this week:</p>
+                    <ul>
+                        {''.join([f"<li><strong>{impact}</strong>: {count} disruptions - This indicates the frequency of disruptions at this severity, where higher counts suggest more common issues of this type affecting urban mobility.</li>" for impact, count in sorted_impact])}
+                    </ul>
+                </section>
 
-print("\nSpatial Analysis:")
-print("A map of disruptions has been saved as 'index.html'.")
+                <section>
+                    <h3>Map of Road Disruptions in London</h3>
+                    <p>This interactive map visualizes the locations of all reported road disruptions in London. Each marker represents a disruption, with red markers indicating severe disruptions (severity level 7 or below) and blue markers for less severe issues. By clicking on a marker, you can see the description of the disruption and its severity level, providing a spatial understanding of where and how often disruptions occur across the city. This can be particularly useful for urban planners to identify hotspots for frequent disruptions.</p>
+                    <iframe src="map.html" title="London Disruptions Map"></iframe>
+                </section>
+
+                <section>
+                    <h3>Visualizations</h3>
+                    <h4>Severity of Disruptions</h4>
+                    <p>This bar chart shows the distribution of disruptions
