@@ -27,4 +27,4 @@ To run this project, you'll need:
 
 or use an iframe (if GitHub Pages supports it for your map):
 ```html
-<iframe src="london_disruptions.html" width="100%" height="500"></iframe>
+<iframe src="index.html" width="100%" height="500"></iframe>

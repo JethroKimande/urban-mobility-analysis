@@ -9,8 +9,8 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     env:
-      TFL_APP_ID: ${{ secrets.TFL_APP_ID }}
-      TFL_APP_KEY: ${{ secrets.TFL_APP_KEY }}
+      TFL_APP_ID: ${secrets.TFL_APP_ID}
+      TFL_APP_KEY: ${secrets.TFL_APP_KEY}
 
     steps:
     - name: Checkout repository

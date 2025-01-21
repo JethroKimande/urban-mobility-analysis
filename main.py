@@ -125,7 +125,7 @@ for disruption in disruptions:
             print(f"Could not plot disruption: {disruption.get('id', 'No ID')} - Error: {e}")
 
 # Save the map
-london_map.save('london_disruptions.html')
+london_map.save('index.html')
 
 print("\nSpatial Analysis:")
-print("A map of disruptions has been saved as 'london_disruptions.html'.")
+print("A map of disruptions has been saved as 'index.html'.")
