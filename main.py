@@ -177,6 +177,7 @@ html_content = f"""
         body {{ display: flex; flex-direction: column; align-items: center; }}
         .container {{ display: flex; width: 100%; max-width: 1200px; margin: 20px 0; }}
         .map-container, .plot-container {{ flex: 1; padding: 10px; }}
+        iframe {{ width: 100%; height: 600px; border: none; }}
         @media (max-width: 768px) {{ 
             .container {{ flex-direction: column; }}
             .map-container, .plot-container {{ width: 100%; }}
