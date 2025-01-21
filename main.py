@@ -190,20 +190,7 @@ html_content = f"""
             <h2>Map of Road Disruptions in London</h2>
             <iframe src="map.html" title="London Disruptions Map"></iframe>
         </div>
-        <div style="position: fixed; 
-           bottom: 50px; left: 50px; 
-           width: 300px; 
-           background-color: white; 
-           padding: 10px; 
-           border: 1px solid #ccc; 
-           border-radius: 5px;">
-            <h3>Urban Mobility Analysis</h3>
-            <p>This map shows current road disruptions in London. Click on markers for details.</p>
-            <h4>Severity of Disruptions</h4>
-            <img src="data:image/png;base64,{severity_plot_data}" alt="Severity Plot" width="100%">
-            <h4>Time Series of Disruptions</h4>
-            <img src="data:image/png;base64,{time_series_plot_data}" alt="Time Series Plot" width="100%">
-            </div>
+       
         <div class="plot-container">
             <h2>Severity of Disruptions</h2>
             <img src="severity_plot.png" alt="Severity Plot" width="100%">
