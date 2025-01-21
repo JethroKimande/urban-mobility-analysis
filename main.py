@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from datetime import datetime
 import os
+import base64
+from io import BytesIO
 from time import sleep
 import folium
 import json
@@ -65,7 +67,16 @@ else:
         plt.text(bar.get_x() + bar.get_width()/2., height,
                  f'{height}', ha='center', va='bottom')
     plt.tight_layout()
-    plt.show()
+
+    # Save the plot as an image
+    severity_plot_buffer = BytesIO()
+    plt.savefig(severity_plot_buffer, format='png')
+    severity_plot_buffer.seek(0)
+    severity_plot_data = base64.b64encode(severity_plot_buffer.getvalue()).decode()
+
+    plt.close()
+
+    # plt.show()
 
     # Print severe disruptions (adjust the severity level threshold as needed)
     severe_disruptions = [d for d in disruptions if int(d.get('severityLevel', 11)) <= 7]
@@ -81,7 +92,16 @@ else:
         plt.title('Distribution of Disruption Start Times')
         plt.xlabel('Hour of Day')
         plt.ylabel('Count of Disruptions')
-        plt.show()
+
+        # Save this plot as an image
+        time_series_plot_buffer = BytesIO()
+        plt.savefig(time_series_plot_buffer, format='png')
+        time_series_plot_buffer.seek(0)
+        time_series_plot_data = base64.b64encode(time_series_plot_buffer.getvalue()).decode()
+
+        plt.close()
+
+        # plt.show()
 
     # 2. Impact analysis by severity
     severity_impact = {}
@@ -125,6 +145,27 @@ for disruption in disruptions:
             print(f"Could not plot disruption: {disruption.get('id', 'No ID')} - Error: {e}")
 
 # Save the map
+
+custom_html = f"""
+<div style="position: fixed; 
+           bottom: 50px; left: 50px; 
+           width: 300px; 
+           background-color: white; 
+           padding: 10px; 
+           border: 1px solid #ccc; 
+           border-radius: 5px;">
+  <h3>Urban Mobility Analysis</h3>
+  <p>This map shows current road disruptions in London. Click on markers for details.</p>
+  <h4>Severity of Disruptions</h4>
+  <img src="data:image/png;base64,{severity_plot_data}" alt="Severity Plot" width="100%">
+  <h4>Time Series of Disruptions</h4>
+  <img src="data:image/png;base64,{time_series_plot_data}" alt="Time Series Plot" width="100%">
+</div>
+"""
+
+# Add custom HTML to the map
+london_map.get_root().html.add_child(folium.Element(custom_html))
+
 london_map.save('index.html')
 
 print("\nSpatial Analysis:")
