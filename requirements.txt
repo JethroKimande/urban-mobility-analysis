@@ -2,3 +2,5 @@ pandas
 matplotlib
 folium
 openpyxl
+dash
+plotly

@@ -11,6 +11,9 @@ from io import BytesIO
 from time import sleep
 import folium
 import json
+import yaml
+import pandas as pd
+import subprocess
 
 # Load YAML data for severity levels
 with open('road_severity_levels.yaml', 'r') as file:
@@ -178,7 +181,7 @@ html_content = f"""
         .sidebar {{ flex: 1; background-color: white; padding: 20px; }}
         .post {{ margin-bottom: 20px; }}
         .post h2 {{ color: #333; }}
-        iframe {{ width: 100%; height: 400px; border: none; margin-bottom: 20px; }}
+        iframe {{ width: 100%; height: 600px; border: none; margin-bottom: 20px; }} /* Adjusted height for dashboard visibility */
         img {{ max-width: 100%; height: auto; margin-bottom: 20px; }}
         @media (max-width: 768px) {{ 
             .content {{ flex-direction: column; }}
@@ -233,6 +236,12 @@ html_content = f"""
                 </section>
 
                 <section>
+                    <h3>Dashboard</h3>
+                    <p>Explore our interactive dashboard for real-time disruption analysis:</p>
+                    <iframe src="http://127.0.0.1:8050" title="TfL Disruption Dashboard" width="100%" height="600"></iframe>
+                </section>
+
+                <section>
                     <h3>Conclusion</h3>
                     <p>Based on the analysis, we observe that the majority of disruptions occur during peak hours, and severe disruptions are more frequent than anticipated. This map and data visualization help in understanding the spatial distribution and severity of these disruptions, aiding in better urban planning and traffic management strategies.</p>
                 </section>
@@ -268,3 +277,9 @@ with open('index.html', 'w') as f:
 
 print("\nSpatial Analysis:")
 print("A blog post with comprehensive analysis has been saved as 'index.html'.")
+# Start the Dash app in a new process
+try:
+    subprocess.Popen(['python', 'dash_app.py'])
+    print("Dash application started in a new process. Access it at http://127.0.0.1:8050")
+except Exception as e:
+    print(f"Failed to start Dash application: {e}")
