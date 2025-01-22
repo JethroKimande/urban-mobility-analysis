@@ -1,4 +1,6 @@
 import yaml
+import pandas as pd
+import openpyxl
 import requests
 import matplotlib.pyplot as plt
 from collections import Counter
@@ -55,7 +57,17 @@ if not disruptions:
 else:
     # Extract severity levels from disruptions
     severity_counts = Counter(int(d['severityLevel']) for d in disruptions if 'severityLevel' in d)
+    print(f"Total disruptions fetched: {len(disruptions)}")
+    # Assuming disruptions is your list or dictionary of disruptions
+    df = pd.DataFrame(disruptions)
 
+    # To save as CSV
+    df.to_csv('disruptions.csv', index=False)
+
+    # To save as Excel
+    df.to_excel('disruptions.xlsx', index=False)
+    for d in disruptions:
+        print(f"Disruption ID: {d.get('id', 'No ID')}, Severity: {d.get('severityLevel', 'No severity level')}")
     # Plot the data
     plt.figure(figsize=(12, 6))
     bars = plt.bar(range(len(severity_counts)), list(severity_counts.values()), align='center', alpha=0.7)
@@ -154,7 +166,7 @@ html_content = f"""
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Urban Mobility Blog</title>
+    <title>Urban Mobility Analysis</title>
     <style>
         body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }}
         .header {{ background-color: #333; color: white; padding: 15px 0; text-align: center; }}
@@ -183,7 +195,6 @@ html_content = f"""
         <a href="#home">Home</a>
         <a href="#about">About</a>
         <a href="#analysis">Analysis</a>
-        <a href="#contact">Contact</a>
     </nav>
 
     <div class="content">
