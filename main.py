@@ -14,7 +14,6 @@ import json
 import yaml
 import pandas as pd
 import subprocess
-from subprocess import Popen
 
 # Load YAML data for severity levels
 with open('road_severity_levels.yaml', 'r') as file:
@@ -75,8 +74,7 @@ else:
     
 
     # Print severe disruptions (adjust the severity level threshold as needed)
-    # Since we're using string values for severity, we'll consider 'Serious' and 'Moderate' as severe
-    severe_disruptions = [d for d in disruptions if d.get('severity', 'No severity') in ['Serious', 'Moderate']]
+    severe_disruptions = [d for d in disruptions if d.get('severity', 'No severity') in ['Serious']]
 
     print("Severe disruptions:")
     for disruption in severe_disruptions:
