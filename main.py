@@ -14,6 +14,7 @@ import json
 import yaml
 import pandas as pd
 import subprocess
+from subprocess import Popen
 
 # Load YAML data for severity levels
 with open('road_severity_levels.yaml', 'r') as file:
@@ -223,22 +224,20 @@ html_content = f"""
                 </section>
 
                 <section>
+                    <h3>Dashboard</h3>
+                    <p>Explore our interactive dashboard for real-time disruption analysis:</p>
+                    <iframe src="http://127.0.0.1:8050" title="TfL Disruption Dashboard" width="100%" height="600"></iframe>
+                </section>
+
+                <section>
                     <h3>Map of Road Disruptions in London</h3>
                     <iframe src="map.html" title="London Disruptions Map"></iframe>
                 </section>
 
                 <section>
                     <h3>Visualizations</h3>
-                    <h4>Severity of Disruptions</h4>
-                    <img src="severity_plot.png" alt="Severity Plot" width="100%"/>
                     <h4>Time Series of Disruptions</h4>
                     <img src="time_series_plot.png" alt="Time Series Plot" width="100%"/>
-                </section>
-
-                <section>
-                    <h3>Dashboard</h3>
-                    <p>Explore our interactive dashboard for real-time disruption analysis:</p>
-                    <iframe src="http://127.0.0.1:8050" title="TfL Disruption Dashboard" width="100%" height="600"></iframe>
                 </section>
 
                 <section>
@@ -278,8 +277,9 @@ with open('index.html', 'w') as f:
 print("\nSpatial Analysis:")
 print("A blog post with comprehensive analysis has been saved as 'index.html'.")
 # Start the Dash app in a new process
-try:
-    subprocess.Popen(['python', 'dash_app.py'])
-    print("Dash application started in a new process. Access it at http://127.0.0.1:8050")
-except Exception as e:
-    print(f"Failed to start Dash application: {e}")
+env = os.environ.copy()
+env['TFL_APP_ID'] = os.getenv('TFL_APP_ID', '')
+env['TFL_APP_KEY'] = os.getenv('TFL_APP_KEY', '')
+
+# Start the Dash app with environment variables
+Popen(['python', 'dash_app.py'], env=env)
