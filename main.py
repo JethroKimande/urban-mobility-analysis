@@ -71,34 +71,16 @@ else:
     # To save as Excel
     df.to_excel('disruptions.xlsx', index=False)
     for d in disruptions:
-        print(f"Disruption ID: {d.get('id', 'No ID')}, Severity: {d.get('severityLevel', 'No severity level')}")
-    # Plot the data
-    plt.figure(figsize=(12, 6))
-    bars = plt.bar(range(len(severity_counts)), list(severity_counts.values()), align='center', alpha=0.7)
-    plt.xticks(range(len(severity_counts)), [severity_dict[k] for k in severity_counts.keys()], rotation='vertical')
-    plt.ylabel('Number of Disruptions')
-    plt.title('Road Disruption Severities - TfL Data')
-    for bar in bars:
-        height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height,
-                 f'{height}', ha='center', va='bottom')
-    plt.tight_layout()
-
-    # Save the plot as an image
-    # severity_plot_buffer = BytesIO()
-    plt.savefig('severity_plot.png')
-    # severity_plot_buffer.seek(0)
-    # severity_plot_data = base64.b64encode(severity_plot_buffer.getvalue()).decode()
-
-    plt.close()
-
-    # plt.show()
+        print(f"Disruption ID: {d.get('id', 'No ID')}, Severity: {d.get('severity', 'No severity level')}")
+    
 
     # Print severe disruptions (adjust the severity level threshold as needed)
-    severe_disruptions = [d for d in disruptions if int(d.get('severityLevel', 11)) <= 7]
+    # Since we're using string values for severity, we'll consider 'Serious' and 'Moderate' as severe
+    severe_disruptions = [d for d in disruptions if d.get('severity', 'No severity') in ['Serious', 'Moderate']]
+
     print("Severe disruptions:")
     for disruption in severe_disruptions:
-        print(f" - {severity_dict.get(int(disruption['severityLevel']), 'Unknown severity')}: {disruption.get('description', 'No description')}")
+        print(f" - {disruption.get('severity', 'Unknown severity')}: {disruption.get('comments', 'No description')}")
 
     # 1. Time series analysis of disruptions
     disruption_times = [datetime.strptime(d['startDateTime'], '%Y-%m-%dT%H:%M:%S%z') for d in disruptions if 'startDateTime' in d]
@@ -120,16 +102,23 @@ else:
         # plt.show()
 
     # 2. Impact analysis by severity
+    # Initialize an empty dictionary to count impacts by severity
     severity_impact = {}
+
+    # Loop through each disruption in the dataset
     for d in disruptions:
-        severity = int(d.get('severityLevel', -1))
-        if severity in severity_dict:
-            impact = severity_dict[severity]
-            severity_impact[impact] = severity_impact.get(impact, 0) + 1
+        # Get the severity directly as a string
+        severity = d.get('severity', 'Unknown severity')
+        
+        # Count the occurrences of each severity level
+        severity_impact[severity] = severity_impact.get(severity, 0) + 1
 
-    # Sort by impact (severity level in reverse order)
-    sorted_impact = sorted(severity_impact.items(), key=lambda x: list(severity_dict.values()).index(x[0]), reverse=True)
+    # Sort by impact (severity in a custom order)
+    # Here we define a custom order since we're dealing with string values
+    severity_order = ['Serious', 'Moderate', 'Minimal', 'No impact']
+    sorted_impact = sorted(severity_impact.items(), key=lambda x: severity_order.index(x[0]) if x[0] in severity_order else len(severity_order))
 
+    # Print the impact analysis
     print("\nImpact Analysis by Severity:")
     for impact, count in sorted_impact:
         print(f" - {impact}: {count} disruptions")
@@ -143,19 +132,20 @@ for disruption in disruptions:
     if 'point' in disruption:
         try:
             point = disruption['point']
-            #print(f"Point data for disruption {disruption.get('id', 'No ID')}: {point}")
+            print(f"Point data for disruption {disruption.get('id', 'No ID')}: {point}")
             
-            # Check if point is a list
+            # Ensure point is a list with 2 elements
             if isinstance(point, list) and len(point) == 2:
                 lat, lon = point[1], point[0]  # Assuming [lon, lat]
             else:
-                raise ValueError("Point data format not recognized")
+                print(f"Point data for disruption {disruption.get('id', 'No ID')} is not in expected format: {point}")
+                continue
 
             # Add a marker for each disruption
             folium.Marker(
                 [lat, lon],
-                popup=f"{disruption.get('description', 'No description')}<br>Severity: {severity_dict.get(int(disruption['severityLevel']), 'Unknown')}",
-                icon=folium.Icon(color='red' if int(disruption['severityLevel']) <= 7 else 'blue')
+                popup=f"{disruption.get('comments', 'No description')}<br>Severity: {disruption.get('severity', 'Unknown severity')}",
+                icon=folium.Icon(color='red' if disruption.get('severity', 'No severity') in ['Serious'] else 'blue')
             ).add_to(london_map)
         except (KeyError, IndexError, TypeError, ValueError) as e:
             print(f"Could not plot disruption: {disruption.get('id', 'No ID')} - Error: {e}")
@@ -215,7 +205,7 @@ html_content = f"""
                     <h3>Analysis Summary</h3>
                     <p><strong>Severe disruptions:</strong> There are {len(severe_disruptions)} severe disruptions this week.</p>
                     <ul>
-                        {''.join([f"<li>{severity_dict.get(int(d['severityLevel']), 'Unknown severity')}: {d.get('description', 'No description')}</li>" for d in severe_disruptions])}
+                        {''.join([f"<li>{d.get('severity', 'Unknown severity')}: {d.get('comments', 'No description')}</li>" for d in severe_disruptions])}
                     </ul>
                     <p><strong>Impact Analysis by Severity:</strong></p>
                     <ul>
