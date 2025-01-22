@@ -201,7 +201,7 @@ html_content = f"""
 
                 <section>
                     <h3>Analysis Summary</h3>
-                    <p><strong>Severe disruptions:</strong> There are {len(severe_disruptions)} severe disruptions this week.</p>
+                    <p><strong>Severe disruptions:</strong> There are {len(severe_disruptions)} severe disruptions now.</p>
                     <ul>
                         {''.join([f"<li>{d.get('severity', 'Unknown severity')}: {d.get('comments', 'No description')}</li>" for d in severe_disruptions])}
                     </ul>
