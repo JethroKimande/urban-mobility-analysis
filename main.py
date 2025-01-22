@@ -143,7 +143,7 @@ for disruption in disruptions:
     if 'point' in disruption:
         try:
             point = disruption['point']
-            print(f"Point data for disruption {disruption.get('id', 'No ID')}: {point}")
+            #print(f"Point data for disruption {disruption.get('id', 'No ID')}: {point}")
             
             # Check if point is a list
             if isinstance(point, list) and len(point) == 2:
@@ -276,10 +276,3 @@ with open('index.html', 'w') as f:
 
 print("\nSpatial Analysis:")
 print("A blog post with comprehensive analysis has been saved as 'index.html'.")
-# Start the Dash app in a new process
-env = os.environ.copy()
-env['TFL_APP_ID'] = os.getenv('TFL_APP_ID', '')
-env['TFL_APP_KEY'] = os.getenv('TFL_APP_KEY', '')
-
-# Start the Dash app with environment variables
-Popen(['python', 'dash_app.py'], env=env)
