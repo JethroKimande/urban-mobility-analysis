@@ -4,3 +4,4 @@ folium
 openpyxl
 dash
 plotly
+dash-bootstrap-components
