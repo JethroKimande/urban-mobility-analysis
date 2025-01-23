@@ -214,7 +214,7 @@ html_content = f"""
                 <section>
                     <h3>Dashboard</h3>
                     <p>Explore our interactive dashboard for real-time disruption analysis:</p>
-                    <iframe src="https://expert-broccoli-j66pjqx7jrw3564w-8050.app.github.dev/" title="TfL Disruption Dashboard" width="100%" height="600"></iframe>
+                    <iframe src="https://127.0.0.1:8050" title="TfL Disruption Dashboard" width="100%" height="600"></iframe>
                 </section>
 
                 <section>
