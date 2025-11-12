@@ -6,99 +6,195 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Urban Mobility Analysis</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-        .header { background-color: #333; color: white; padding: 15px 0; text-align: center; }
-        .nav { background-color: #444; overflow: hidden; }
-        .nav a { float: left; display: block; color: white; text-align: center; padding: 14px 16px; text-decoration: none; }
-        .nav a:hover { background-color: #ddd; color: black; }
-        .content { display: flex; flex-wrap: wrap; max-width: 1200px; margin: 20px auto; }
-        .main-content { flex: 3; background-color: white; padding: 20px; margin-right: 20px; }
-        .sidebar { flex: 1; background-color: white; padding: 20px; }
-        .post { margin-bottom: 20px; }
-        .post h2 { color: #333; }
-        iframe { width: 100%; height: 600px; border: none; margin-bottom: 20px; } /* Adjusted height for dashboard visibility */
-        img { max-width: 100%; height: auto; margin-bottom: 20px; }
-        @media (max-width: 768px) { 
-            .content { flex-direction: column; }
-            .main-content, .sidebar { flex: 1 1 100%; margin-right: 0; margin-bottom: 20px; }
+        :root {
+            --bg: #f4f4f4;
+            --card: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --brand: #2563eb;
+            --brand-600: #1e40af;
+            --border: #e5e7eb;
         }
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --card: #111827;
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --brand: #60a5fa;
+            --brand-600: #3b82f6;
+            --border: #1f2937;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); }
+        .header { background: linear-gradient(90deg, var(--brand), var(--brand-600)); color: white; padding: 18px 0; }
+        .header .inner { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand h1 { margin: 0; font-size: 20px; letter-spacing: 0.4px; }
+        .nav { background-color: rgba(0,0,0,0.1); }
+        .nav .inner { max-width: 1200px; margin: 0 auto; padding: 0 16px; display: flex; gap: 8px; overflow: auto; }
+        .nav a { display: inline-block; color: white; padding: 12px 14px; text-decoration: none; border-radius: 6px; }
+        .nav a:hover { background-color: rgba(255,255,255,0.15); }
+        .content { display: flex; flex-wrap: wrap; max-width: 1200px; margin: 20px auto; gap: 20px; padding: 0 16px; }
+        .main-content { flex: 3; min-width: 300px; }
+        .sidebar { flex: 1; min-width: 240px; }
+        .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .post { margin-bottom: 20px; }
+        .post h2 { color: var(--text); margin-top: 0; }
+        .muted { color: var(--muted); }
+        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); }
+        .badge.serious { background: #fee2e2; color: #991b1b; }
+        .badge.moderate { background: #ffedd5; color: #9a3412; }
+        .badge.minimal { background: #e0f2fe; color: #075985; }
+        .section-title { margin-bottom: 8px; }
+        .btn { border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+        .btn:hover { background: #f8fafc22; }
+        .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background: var(--bg); border: 1px solid var(--border); border-bottom-width: 2px; padding: 2px 6px; border-radius: 6px; }
+        .embed { position: relative; width: 100%; overflow: hidden; border-radius: 10px; border: 1px solid var(--border); }
+        .embed.ratio-16x9 { padding-top: 56.25%; }
+        .embed iframe, .embed img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .list { padding-left: 18px; }
+        .footer { max-width: 1200px; margin: 0 auto; padding: 12px 16px; color: var(--muted); }
+        .sticky-actions { display: flex; gap: 8px; align-items: center; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .content { flex-direction: column; } }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>Urban Mobility Blog</h1>
+        <div class="inner">
+            <div class="brand">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12h18M4 8h16M6 16h12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+                <h1>Urban Mobility Blog</h1>
+            </div>
+            <div class="sticky-actions">
+                <button id="themeToggle" class="btn" title="Toggle theme">Toggle theme</button>
+                <a class="btn" href="map.html" target="_blank" rel="noopener">Open Map</a>
+                <a class="btn" href="disruptions.csv" target="_blank" rel="noopener">CSV</a>
+            </div>
+        </div>
     </header>
 
     <nav class="nav">
-        <a href="#home">Home</a>
-        <a href="#about">About</a>
-        <a href="#analysis">Analysis</a>
+        <div class="inner">
+            <a href="#home">Home</a>
+            <a href="#about">About</a>
+            <a href="#analysis">Analysis</a>
+            <a href="#dashboard">Dashboard</a>
+            <a href="#map">Map</a>
+            <a href="#visualizations">Visualizations</a>
+            <a href="archives.html">Archives</a>
+        </div>
     </nav>
 
     <div class="content">
         <main class="main-content">
-            <article class="post">
+            <article class="post card">
                 <h2 id="analysis">Weekly Urban Mobility Analysis</h2>
-                <p>Published on: 2025-01-23</p>
+                <p class="muted">Published on: 2025-11-12</p>
                 <section>
-                    <h3>Introduction</h3>
+                    <h3 class="section-title">Introduction</h3>
                     <p>Welcome to our weekly urban mobility analysis focusing on road disruptions in London. This analysis aims to provide insights into the severity, timing, and location of disruptions to help in planning and understanding urban mobility issues.</p>
                 </section>
 
                 <section>
-                    <h3>Analysis Summary</h3>
-                    <p><strong>Severe disruptions:</strong> There are 4 severe disruptions now.</p>
-                    <ul>
-                        <li>Serious: [A501] City Road (Eastbound) at the junction of Colebrooke Row - Lane one (of two) closed during works.</li><li>Serious: [A3] West Hill (All directions) at the junction of [A205] Upper Richmond Road - Temporary signals in operation to facilitate repairs to a burst water main.</li><li>Serious: [A23] Brixton Hill (Both directions) at the junction of Beechdale Road - Temporary Signals are in operation for Thames Water works  being carried out at this location.</li><li>Serious: [A501] Euston Road (Both directions) at the junction of [A4200] Upper Woburn Place - TfL drainage works - starts Upper Woburn Place, with temporary signals and will then progress onto Euston Road with lane restrictions to Gower Street.</li>
-                    </ul>
-                    <p><strong>Impact Analysis by Severity:</strong></p>
-                    <ul>
-                        <li>Serious: 4 disruptions</li><li>Moderate: 17 disruptions</li><li>Minimal: 32 disruptions</li>
-                    </ul>
+                    <h3 class="section-title">Analysis Summary</h3>
+                    <div class="grid">
+                        <div class="card">
+                            <p><strong>Severe disruptions now</strong></p>
+                            <p><span class="badge serious">Serious</span> 4</p>
+                        </div>
+                        <div class="card">
+                            <p><strong>Distribution by severity</strong></p>
+                            <p><span class="badge serious">Serious</span> 4</p>
+                            <p><span class="badge moderate">Moderate</span> 17</p>
+                            <p><span class="badge minimal">Minimal</span> 32</p>
+                        </div>
+                    </div>
+                    <details style="margin-top:12px;">
+                        <summary class="muted">Show severe disruption details</summary>
+                        <ul class="list">
+                            <li>Serious: [A501] City Road (Eastbound) at the junction of Colebrooke Row - Lane one (of two) closed during works.</li>
+                            <li>Serious: [A3] West Hill (All directions) at the junction of [A205] Upper Richmond Road - Temporary signals in operation to facilitate repairs to a burst water main.</li>
+                            <li>Serious: [A23] Brixton Hill (Both directions) at the junction of Beechdale Road - Temporary Signals are in operation for Thames Water works  being carried out at this location.</li>
+                            <li>Serious: [A501] Euston Road (Both directions) at the junction of [A4200] Upper Woburn Place - TfL drainage works - starts Upper Woburn Place, with temporary signals and will then progress onto Euston Road with lane restrictions to Gower Street.</li>
+                        </ul>
+                    </details>
                 </section>
 
-                <section>
-                    <h3>Dashboard</h3>
+                <section id="dashboard">
+                    <h3 class="section-title">Dashboard</h3>
                     <p>Explore our interactive dashboard for real-time disruption analysis:</p>
-                    <iframe src="https://expert-broccoli-j66pjqx7jrw3564w-8050.app.github.dev/" title="TfL Disruption Dashboard" width="100%" height="600"></iframe>
+                    <div class="embed ratio-16x9">
+                        <iframe src="http://127.0.0.1:8050/" title="TfL Disruption Dashboard" loading="lazy" referrerpolicy="no-referrer"></iframe>
+                    </div>
                 </section>
 
-                <section>
-                    <h3>Map of Road Disruptions in London</h3>
-                    <iframe src="map.html" title="London Disruptions Map"></iframe>
+                <section id="map">
+                    <h3 class="section-title">Map of Road Disruptions in London</h3>
+                    <div class="embed ratio-16x9">
+                        <iframe src="map.html" title="London Disruptions Map" loading="lazy"></iframe>
+                    </div>
                 </section>
 
-                <section>
-                    <h3>Visualizations</h3>
+                <section id="visualizations">
+                    <h3 class="section-title">Visualizations</h3>
                     <h4>Time Series of Disruptions</h4>
-                    <img src="time_series_plot.png" alt="Time Series Plot" width="100%"/>
+                    <div class="embed ratio-16x9">
+                        <img src="time_series_plot.png" alt="Time Series Plot"/>
+                    </div>
                 </section>
 
                 <section>
-                    <h3>Conclusion</h3>
+                    <h3 class="section-title">Conclusion</h3>
                     <p>Based on the analysis, we observe that the majority of disruptions occur during peak hours, and severe disruptions are more frequent than anticipated. This map and data visualization help in understanding the spatial distribution and severity of these disruptions, aiding in better urban planning and traffic management strategies.</p>
                 </section>
             </article>
         </main>
 
         <aside class="sidebar">
-            <h2>About This Blog</h2>
-            <p>This blog provides weekly insights into urban mobility issues in London, focusing on road disruptions. Our aim is to inform and engage the community in discussions about traffic management and urban planning.</p>
-            
-            <h2>Recent Posts</h2>
-            <ul>
-                <li><a href="#post1">Last Week's Analysis</a></li>
-                <li><a href="#post2">Impact of Weather on Traffic</a></li>
-                <li><a href="#post3">Future of Urban Mobility</a></li>
-            </ul>
-            
-            <h2>Contact Us</h2>
-            <p>For inquiries or to contribute, reach us at <a href="mailto:urbanmobility@example.com">urbanmobility@example.com</a></p>
+            <div class="card">
+                <h2>About This Blog</h2>
+                <p>This blog provides weekly insights into urban mobility issues in London, focusing on road disruptions. Our aim is to inform and engage the community in discussions about traffic management and urban planning.</p>
+            </div>
+            <div class="card">
+                <h2>Recent Posts</h2>
+                <ul class="list">
+                    <li><a href="#post1">Last Week's Analysis</a></li>
+                    <li><a href="#post2">Impact of Weather on Traffic</a></li>
+                    <li><a href="#post3">Future of Urban Mobility</a></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h2>Quick links</h2>
+                <p><span class="kbd">CSV</span> and <span class="kbd">XLSX</span> exports are available:</p>
+                <ul class="list">
+                    <li><a href="disruptions.csv" download>Download CSV</a></li>
+                    <li><a href="disruptions.xlsx" download>Download XLSX</a></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h2>Contact Us</h2>
+                <p>For inquiries or to contribute, reach us at <a href="mailto:urbanmobility@example.com">urbanmobility@example.com</a></p>
+            </div>
         </aside>
     </div>
 
-    <footer>
-        <p>Data sourced from Transport for London API. Last updated: 2025-01-23 18:30:12</p>
+    <footer class="footer">
+        <p>Data sourced from Transport for London API. Last updated: 2025-11-12 12:43:09</p>
     </footer>
+    <script>
+        (function() {
+            const root = document.documentElement;
+            const btn = document.getElementById('themeToggle');
+            const saved = localStorage.getItem('theme');
+            if (saved) { root.setAttribute('data-theme', saved); }
+            btn && btn.addEventListener('click', function() {
+                const current = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                root.setAttribute('data-theme', current);
+                localStorage.setItem('theme', current);
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -5,3 +5,5 @@ openpyxl
 dash
 plotly
 dash-bootstrap-components
+requests
+PyYAML

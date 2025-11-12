@@ -11,23 +11,22 @@ from io import BytesIO
 from time import sleep
 import folium
 import json
-import yaml
-import pandas as pd
-import subprocess
+from shutil import copyfile
 
 # Load YAML data for severity levels
 with open('road_severity_levels.yaml', 'r') as file:
     severities = yaml.safe_load(file)
 severity_dict = {item['severityLevel']: item['description'] for item in severities}
 
-# TfL API credentials - Use environment variables for security
+# TfL API credentials - Use environment variables for security (optional for local dev)
 app_id = os.getenv('TFL_APP_ID', "")
 app_key = os.getenv('TFL_APP_KEY', "")
 
-if not app_key:
-    raise EnvironmentError("TFL_APP_KEY environment variable not set. Please set it before running the script.")
-
 def fetch_tfl_disruptions():
+    # If credentials are missing, skip remote call
+    if not app_key:
+        print("Warning: TFL_APP_KEY not set. Skipping API call and using local cache if available.")
+        return []
     url = f"https://api.tfl.gov.uk/Road/all/Disruption?app_id={app_id}&app_key={app_key}"
     max_retries = 3
     for attempt in range(max_retries):
@@ -37,9 +36,15 @@ def fetch_tfl_disruptions():
             return response.json()
         except requests.exceptions.HTTPError as http_err:
             print(f"HTTP error occurred: {http_err}")
-            if response.status_code == 429:  # Rate limit exceeded
-                print("Rate limit exceeded. Retrying in 60 seconds...")
-                sleep(60)  # Wait for a minute
+            # Check status code if response exists
+            if hasattr(http_err, 'response') and http_err.response is not None:
+                if http_err.response.status_code == 429:  # Rate limit exceeded
+                    print("Rate limit exceeded. Retrying in 60 seconds...")
+                    sleep(60)  # Wait for a minute
+                    continue
+            if attempt < max_retries - 1:
+                print(f"Retrying in {2**attempt} seconds...")
+                sleep(2**attempt)  # Exponential backoff
             else:
                 break
         except requests.exceptions.RequestException as e:
@@ -55,6 +60,33 @@ def fetch_tfl_disruptions():
 # Fetch disruptions from TfL API
 disruptions = fetch_tfl_disruptions()
 
+# Local fallbacks if API not available or returned nothing
+if not disruptions:
+    # Try JSON cache
+    if os.path.exists('disruptions.json'):
+        try:
+            with open('disruptions.json', 'r', encoding='utf-8') as f:
+                disruptions = json.load(f)
+                print("Loaded disruptions from local disruptions.json cache.")
+        except Exception as e:
+            print(f"Failed to read disruptions.json: {e}")
+    # Try CSV
+    if not disruptions and os.path.exists('disruptions.csv'):
+        try:
+            df_cached = pd.read_csv('disruptions.csv')
+            disruptions = df_cached.to_dict(orient='records')
+            print("Loaded disruptions from local disruptions.csv.")
+        except Exception as e:
+            print(f"Failed to read disruptions.csv: {e}")
+    # Try Excel
+    if not disruptions and os.path.exists('disruptions.xlsx'):
+        try:
+            df_cached_xlsx = pd.read_excel('disruptions.xlsx')
+            disruptions = df_cached_xlsx.to_dict(orient='records')
+            print("Loaded disruptions from local disruptions.xlsx.")
+        except Exception as e:
+            print(f"Failed to read disruptions.xlsx: {e}")
+
 if not disruptions:
     print("No disruption data available or there was an error in fetching data.")
 else:
@@ -69,6 +101,12 @@ else:
 
     # To save as Excel
     df.to_excel('disruptions.xlsx', index=False)
+    # To save as JSON
+    try:
+        with open('disruptions.json', 'w', encoding='utf-8') as jf:
+            json.dump(disruptions, jf, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Failed to write disruptions.json: {e}")
     for d in disruptions:
         print(f"Disruption ID: {d.get('id', 'No ID')}, Severity: {d.get('severity', 'No severity level')}")
     
@@ -122,34 +160,34 @@ else:
         print(f" - {impact}: {count} disruptions")
 
     # 3. Spatial analysis
-# Create a base map centered on London
-london_map = folium.Map(location=[51.5074, -0.1278], zoom_start=12)
+    # Create a base map centered on London
+    london_map = folium.Map(location=[51.5074, -0.1278], zoom_start=12)
 
-for disruption in disruptions:
-    # Check if the disruption has a point
-    if 'point' in disruption:
-        try:
-            point = disruption['point']
-            print(f"Point data for disruption {disruption.get('id', 'No ID')}: {point}")
-            
-            # Ensure point is a list with 2 elements
-            if isinstance(point, list) and len(point) == 2:
-                lat, lon = point[1], point[0]  # Assuming [lon, lat]
-            else:
-                print(f"Point data for disruption {disruption.get('id', 'No ID')} is not in expected format: {point}")
-                continue
+    for disruption in disruptions:
+        # Check if the disruption has a point
+        if 'point' in disruption:
+            try:
+                point = disruption['point']
+                print(f"Point data for disruption {disruption.get('id', 'No ID')}: {point}")
+                
+                # Ensure point is a list with 2 elements
+                if isinstance(point, list) and len(point) == 2:
+                    lat, lon = point[1], point[0]  # Assuming [lon, lat]
+                else:
+                    print(f"Point data for disruption {disruption.get('id', 'No ID')} is not in expected format: {point}")
+                    continue
 
-            # Add a marker for each disruption
-            folium.Marker(
-                [lat, lon],
-                popup=f"{disruption.get('comments', 'No description')}<br>Severity: {disruption.get('severity', 'Unknown severity')}",
-                icon=folium.Icon(color='red' if disruption.get('severity', 'No severity') in ['Serious'] else 'blue')
-            ).add_to(london_map)
-        except (KeyError, IndexError, TypeError, ValueError) as e:
-            print(f"Could not plot disruption: {disruption.get('id', 'No ID')} - Error: {e}")
+                # Add a marker for each disruption
+                folium.Marker(
+                    [lat, lon],
+                    popup=f"{disruption.get('comments', 'No description')}<br>Severity: {disruption.get('severity', 'Unknown severity')}",
+                    icon=folium.Icon(color='red' if disruption.get('severity', 'No severity') in ['Serious'] else 'blue')
+                ).add_to(london_map)
+            except (KeyError, IndexError, TypeError, ValueError) as e:
+                print(f"Could not plot disruption: {disruption.get('id', 'No ID')} - Error: {e}")
 
-# Save the map
-london_map.save("map.html")
+    # Save the map
+    london_map.save("map.html")
 
 # Create a blog-like HTML content
 html_content = f"""
@@ -264,3 +302,91 @@ with open('index.html', 'w') as f:
 
 print("\nSpatial Analysis:")
 print("A blog post with comprehensive analysis has been saved as 'index.html'.")
+
+# -------------------------------------------
+# Archival: Save weekly snapshots under data/YYYY-MM-DD and build archives.html
+# -------------------------------------------
+def ensure_dir(path: str) -> None:
+    if not os.path.exists(path):
+        os.makedirs(path, exist_ok=True)
+
+def write_json(path: str, data_obj) -> None:
+    with open(path, 'w', encoding='utf-8') as fobj:
+        json.dump(data_obj, fobj, ensure_ascii=False, indent=2)
+
+today_str = datetime.now().strftime('%Y-%m-%d')
+archive_dir = os.path.join('data', today_str)
+ensure_dir('data')
+ensure_dir(archive_dir)
+
+# Copy latest outputs into archive folder
+for src, dst_name in [
+    ('disruptions.csv', 'disruptions.csv'),
+    ('disruptions.xlsx', 'disruptions.xlsx'),
+    ('disruptions.json', 'disruptions.json'),
+    ('map.html', 'map.html'),
+    ('time_series_plot.png', 'time_series_plot.png'),
+    ('index.html', 'index.html'),
+]:
+    if os.path.exists(src):
+        try:
+            copyfile(src, os.path.join(archive_dir, dst_name))
+        except Exception as e:
+            print(f"Archive copy failed for {src} -> {archive_dir}: {e}")
+
+# Maintain an index of available archive dates
+archives_index_path = os.path.join('data', 'index.json')
+archives = []
+if os.path.exists(archives_index_path):
+    try:
+        with open(archives_index_path, 'r', encoding='utf-8') as idxf:
+            archives = json.load(idxf)
+    except Exception as e:
+        print(f"Failed to read archives index: {e}")
+if today_str not in archives:
+    archives.append(today_str)
+    archives.sort(reverse=True)
+    write_json(archives_index_path, archives)
+
+# Generate a simple archives.html page
+archives_items = '\n'.join(
+    [f'<li><a href="data/{d}/index.html">{d} report</a> — '
+     f'<a href="data/{d}/map.html">map</a> — '
+     f'<a href="data/{d}/disruptions.json">json</a> — '
+     f'<a href="data/{d}/disruptions.csv">csv</a> — '
+     f'<a href="data/{d}/disruptions.xlsx">xlsx</a></li>'
+     for d in archives]
+)
+archives_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Mobility Archives</title>
+    <style>
+        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f8fafc; }}
+        h1 {{ margin-top: 0; }}
+        .muted {{ color: #6b7280; }}
+        .card {{ background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; max-width: 900px; }}
+    </style>
+    <link rel="icon" href="data:,">
+</head>
+<body>
+    <h1>Urban Mobility Archives</h1>
+    <p class="muted">Weekly snapshots of reports and datasets.</p>
+    <div class="card">
+        <ol>
+            {archives_items}
+        </ol>
+    </div>
+    <p><a href="./">Back to latest report</a></p>
+    <footer class="muted"><small>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</small></footer>
+</body>
+</html>
+"""
+try:
+    with open('archives.html', 'w', encoding='utf-8') as archf:
+        archf.write(archives_html)
+    print("Archives page generated at 'archives.html'.")
+except Exception as e:
+    print(f"Failed to write archives.html: {e}")
